@@ -1,0 +1,39 @@
+- name: Setup Docker Node
+  hosts: docker
+  become: true
+  tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+        update_cache: true
+    - name: Add Docker GPG key
+      apt_key:
+        url: https://download.docker.com/linux/ubuntu/gpg
+        state: present
+    - name: Add Docker repo
+      apt_repository:
+        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
+        state: present
+    - name: Install Docker
+      apt:
+        name: docker-ce
+        state: latest
+        update_cache: true
+    - name: Run Redis container
+      docker_container:
+        name: redis
+        image: redis
+        state: started
+        ports:
+          - "6379:6379"
+    - name: Verify Redis container
+      command: docker ps
+      register: docker_output
+    - name: Show output
+      debug:
+        var: docker_output.stdout_lines
